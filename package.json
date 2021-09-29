@@ -1,0 +1,46 @@
+{
+  "name": "spooky-nft-contracts",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Contracts for all things spooky nft related",
+  "files": [
+    "abi",
+    "artifacts",
+    "contracts",
+    "deployments",
+    "exports",
+    "types"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spookyswap/spooky-nft-contracts.git"
+  },
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test --verbose",
+    "deploy": "npx hardhat --network fantom deploy",
+    "deploy:ftmtest": "npx hardhat --network fantomtest deploy",
+    "deploy:localhost": "npx hardhat --network localhost deploy"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
+    "@nomiclabs/hardhat-etherscan": "^2.1.4",
+    "@nomiclabs/hardhat-solhint": "^2.0.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "@openzeppelin/contracts": "^4.2.0",
+    "@types/chai": "^4.2.21",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.4.1",
+    "chai": "^4.3.4",
+    "dotenv": "^10.0.0",
+    "ethereum-waffle": "^3.0.0",
+    "ethers": "^5.4.2",
+    "hardhat": "^2.6.4",
+    "hardhat-abi-exporter": "^2.2.1",
+    "hardhat-deploy": "^0.8.11",
+    "hardhat-spdx-license-identifier": "^2.0.3",
+    "solidity-coverage": "^0.7.16",
+    "ts-node": "^10.1.0",
+    "typescript": "^4.3.5"
+  }
+}
