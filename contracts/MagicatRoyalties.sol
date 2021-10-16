@@ -48,8 +48,11 @@ contract MagicatRoyalties is Ownable {
 
         require(wftmBal > 0, "_distribute, no FTM or wFTM balance");
 
+        // send dev cut as native ftm
         wftmBal = wftmBal * devCut / 10000;
-        IERC20(wftm).safeTransfer(owner(), wftmBal);
+        IWFTM(wftm).withdraw(wftmBal);
+        ftmBal = address(this).balance;
+        safeTransferFTM(owner(), ftmBal);
 
         wftmBal = IERC20(wftm).balanceOf(address(this));
 
@@ -79,6 +82,11 @@ contract MagicatRoyalties is Ownable {
         uint numerator = amountInWithFee * reserveOut;
         uint denominator = reserveIn * 1000 + amountInWithFee;
         amountOut = numerator / denominator;
+    }
+
+    function safeTransferFTM(address to, uint value) private {
+        (bool success,) = to.call{value:value}(new bytes(0));
+        require(success, 'TransferHelper: FTM_TRANSFER_FAILED');
     }
 
     // Admin Function
