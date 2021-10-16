@@ -49,7 +49,7 @@ contract MagicatRoyalties is Ownable {
         require(wftmBal > 0, "_distribute, no FTM or wFTM balance");
 
         // send dev cut as native ftm
-        IWFTM(wftm).withdraw(wftmBal * devCut / 10000);
+        IWFTM(wftm).withdraw((wftmBal * devCut) / 10000);
         safeTransferFTM(devAddr, address(this).balance);
 
         wftmBal = IERC20(wftm).balanceOf(address(this));
