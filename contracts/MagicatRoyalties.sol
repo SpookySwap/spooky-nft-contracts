@@ -52,7 +52,7 @@ contract MagicatRoyalties is Ownable {
         wftmBal = wftmBal * devCut / 10000;
         IWFTM(wftm).withdraw(wftmBal);
         ftmBal = address(this).balance;
-        safeTransferFTM(owner(), ftmBal);
+        safeTransferFTM(devAddr, ftmBal);
 
         wftmBal = IERC20(wftm).balanceOf(address(this));
 
