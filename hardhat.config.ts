@@ -56,6 +56,9 @@ const config: HardhatUserConfig = {
       chainId: 4002,
       gasMultiplier: 2,
     },
+    hardhat: {
+      chainId: 1337,
+    },
   },
   spdxLicenseIdentifier: {
     overwrite: false,
