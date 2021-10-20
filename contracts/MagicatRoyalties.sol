@@ -10,7 +10,7 @@ contract MagicatRoyalties {
     using SafeERC20 for IERC20;
 
     address public immutable xboo = 0xa48d959AE2E88f1dAA7D5F611E01908106dE7598;
-    uint public devCut = 5000; // can be changed with a max of 50% (5000/10000)
+    uint public immutable devCut;
     IUniswapV2Pair public immutable pair = IUniswapV2Pair(0xEc7178F4C41f346b2721907F5cF7628E388A7a58); // boo-ftm pair
     address public immutable wftm = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
     address public devAddr;
@@ -26,8 +26,9 @@ contract MagicatRoyalties {
         _;
     }
 
-    constructor (address _devAddr) {
+    constructor (address _devAddr, uint _devCut) {
         devAddr = _devAddr;
+        devCut = _devCut;
     }
 
     function distribute(address stuckToken) public onlyEOA{
@@ -99,11 +100,5 @@ contract MagicatRoyalties {
         require(_addr != address(0), "setDevAddr, address cannot be zero address");
         devAddr = _addr;
     }
-
-    function setDevCut(uint _amount) external onlyDevAddr {
-        require(_amount < 5000, "setDevCut: cut too high"); // max of 50%
-        devCut = _amount;
-    }
-
 
 }
