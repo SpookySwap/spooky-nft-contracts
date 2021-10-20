@@ -57,7 +57,6 @@ contract MagicatRoyalties {
             // send dev cut as native ftm
             IWFTM(wftm).withdraw(wftmBal * devCut / 10000);
             safeTransferFTM(devAddr, address(this).balance);
-
             wftmBal = IERC20(wftm).balanceOf(address(this));
 
             _swap(wftm, wftmBal, xboo);
