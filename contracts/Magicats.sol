@@ -19,10 +19,15 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
 
     Counters.Counter private _tokenIdTracker;
 
+    mapping (address => bool) claimWhitelist;
+    string public MAGICATS_PROVENANCE = "";
+    uint256 public startingIndexBlock;
+    uint256 public startingIndex;
+    uint256 public revealTimestamp;
+    uint256 public claimTimestampEnd;
     uint256 public constant MAX_ELEMENTS = 5000;
     uint256 public constant PRICE = 150 * 10**18;
     uint256 public constant MAX_BY_MINT = 10;
-    uint256 public constant reveal_timestamp = 0;
     address public constant creatorAddress = 0x0000000000000000000000000000000000000000;
     address public constant devAddress = 0x0000000000000000000000000000000000000000;
     string public baseTokenURI;
@@ -33,6 +38,8 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     event CreateCat(uint256 indexed id);
     constructor(string memory baseURI) ERC721("Magicats", "MGC") {
         setBaseURI(baseURI);
+        revealTimestamp = block.timestamp + (86400 * 7); // reveal in 7 days
+        claimTimestampEnd = block.timestamp + (86400 * 2); // claim window is 2 days
     }
 
     modifier saleIsOpen {
@@ -42,11 +49,25 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
         }
         _;
     }
+
+    function addToWhitelist(address addr) public onlyOwner {
+        claimWhitelist[addr] = true;
+    }
+    function removedFromWhitelist(address addr) public onlyOwner {
+        claimWhitelist[addr] = false;
+    }
     function _totalSupply() internal view returns (uint) {
         return _tokenIdTracker.current();
     }
     function totalMint() public view returns (uint256) {
         return _totalSupply();
+    }
+    function _setStartingIndexBlock() internal {
+        // If we haven't set the starting index and this is either 1) the last saleable token or 2) the first token to be sold after
+        // the end of pre-sale, set the starting index block
+        if (startingIndexBlock == 0 && (_totalSupply() == MAX_ELEMENTS || block.timestamp >= revealTimestamp)) {
+            startingIndexBlock = block.number;
+        } 
     }
     function mint(address _to, uint256 _count) public payable saleIsOpen {
         uint256 total = _totalSupply();
@@ -58,6 +79,21 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
         for (uint256 i = 0; i < _count; i++) {
             _mintAnElement(_to);
         }
+
+        _setStartingIndexBlock();
+    }
+    function claim(address _to) public saleIsOpen {
+        require(claimWhitelist[msg.sender], "Address not whitelisted");
+        require(block.timestamp <= claimTimestampEnd, "Claim window has expired");
+
+        uint256 total = _totalSupply();
+        require(total + 1 <= MAX_ELEMENTS, "Max limit");
+        require(total <= MAX_ELEMENTS, "Sale end");
+
+        _mintAnElement(_to);
+
+        _setStartingIndexBlock();
+
     }
     function _mintAnElement(address _to) private {
         uint id = _totalSupply();
@@ -121,5 +157,43 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, ERC721Enumerable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
+
+    function setRevealTimestamp(uint256 newRevealTimestamp) public onlyOwner {
+        revealTimestamp = newRevealTimestamp;
+    }
+
+    /*     
+    * Set provenance once it's calculated
+    */
+    function setProvenanceHash(string memory provenanceHash) public onlyOwner {
+        MAGICATS_PROVENANCE = provenanceHash;
+    }
     
+    /**
+     * Set the starting index for the collection
+     */
+    function setStartingIndex() public {
+        require(startingIndex == 0, "Starting index is already set");
+        require(startingIndexBlock != 0, "Starting index block must be set");
+        
+        startingIndex = uint(blockhash(startingIndexBlock)) % MAX_ELEMENTS;
+        // Just a sanity case in the worst case if this function is called late (EVM only stores last 256 block hashes)
+        if (block.number.sub(startingIndexBlock) > 255) {
+            startingIndex = uint(blockhash(block.number - 1)) % MAX_ELEMENTS;
+        }
+        // Prevent default sequence
+        if (startingIndex == 0) {
+            startingIndex = startingIndex.add(1);
+        }
+    }
+
+    /**
+     * Set the starting index block for the collection, essentially unblocking
+     * setting starting index
+     */
+    function emergencySetStartingIndexBlock() public onlyOwner {
+        require(startingIndex == 0, "Starting index is already set");
+        
+        startingIndexBlock = block.number;
+    }
 }
