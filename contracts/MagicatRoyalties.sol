@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import "./interfaces/IUniswapV2Pair.sol";
 import './interfaces/IWFTM.sol';
 
-contract MagicatRoyalties is Ownable {
+contract MagicatRoyalties {
     using SafeERC20 for IERC20;
 
-    address public immutable xboo = address(0xa48d959AE2E88f1dAA7D5F611E01908106dE7598);
+    address public immutable xboo = 0xa48d959AE2E88f1dAA7D5F611E01908106dE7598;
     uint public devCut = 5000; // can be changed with a max of 50% (5000/10000)
     IUniswapV2Pair public immutable pair = IUniswapV2Pair(0xEc7178F4C41f346b2721907F5cF7628E388A7a58); // boo-ftm pair
-    IERC20 public immutable boo = IERC20(0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE);
-    address public immutable wftm = address(0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83);
+    address public immutable wftm = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
     address public devAddr;
 
     modifier onlyEOA() {
@@ -23,12 +21,21 @@ contract MagicatRoyalties is Ownable {
         _;
     }
 
+    modifier onlyDevAddr() {
+        require(msg.sender == devAddr, "not dev");
+        _;
+    }
+
     constructor (address _devAddr) {
         devAddr = _devAddr;
     }
 
-    function distribute() public onlyEOA{
+    function distribute(address stuckToken) public onlyEOA{
         _distribute();
+        if (stuckToken != address(0)) {
+            require(stuckToken != wftm, "distribute, cant directly withdraw wftm");
+            IERC20(stuckToken).transfer(devAddr, IERC20(stuckToken).balanceOf(address(this)));
+        }
     }
 
     receive() external payable {
@@ -46,15 +53,14 @@ contract MagicatRoyalties is Ownable {
 
         uint wftmBal = IERC20(wftm).balanceOf(address(this));
 
-        require(wftmBal > 0, "_distribute, no FTM or wFTM balance");
+        if(wftmBal > 0){
+            // send dev cut as native ftm
+            IWFTM(wftm).withdraw(wftmBal * devCut / 10000);
+            safeTransferFTM(devAddr, address(this).balance);
+            wftmBal = IERC20(wftm).balanceOf(address(this));
 
-        // send dev cut as native ftm
-        IWFTM(wftm).withdraw((wftmBal * devCut) / 10000);
-        safeTransferFTM(devAddr, address(this).balance);
-
-        wftmBal = IERC20(wftm).balanceOf(address(this));
-
-        _swap(wftm, wftmBal, xboo);
+            _swap(wftm, wftmBal, xboo);
+        }
     }
 
     function _swap(
@@ -89,12 +95,12 @@ contract MagicatRoyalties is Ownable {
 
     // Admin Function
 
-    function setDevAddr(address _addr) external onlyOwner {
+    function setDevAddr(address _addr) external onlyDevAddr {
         require(_addr != address(0), "setDevAddr, address cannot be zero address");
         devAddr = _addr;
     }
 
-    function setDevCut(uint _amount) external onlyOwner {
+    function setDevCut(uint _amount) external onlyDevAddr {
         require(_amount < 5000, "setDevCut: cut too high"); // max of 50%
         devCut = _amount;
     }
