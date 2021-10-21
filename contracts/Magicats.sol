@@ -19,12 +19,13 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
 
     Counters.Counter private _tokenIdTracker;
 
-    mapping (address => bool) claimWhitelist;
+    mapping (address => uint) claimWhitelist;
     string public MAGICATS_PROVENANCE = "";
     uint256 public startingIndexBlock;
     uint256 public startingIndex;
     uint256 public revealTimestamp;
     uint256 public claimTimestampEnd;
+    uint256 public whitelistedElements;
     uint256 public constant MAX_ELEMENTS = 5000;
     uint256 public constant PRICE = 150 * 10**18;
     uint256 public constant MAX_BY_MINT = 10;
@@ -50,11 +51,16 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
         _;
     }
 
-    function addToWhitelist(address addr) public onlyOwner {
-        claimWhitelist[addr] = true;
+    function addToWhitelist(address[] memory addrs, uint[] memory quantity) public onlyOwner {
+        require(addrs.length == quantity.length, "Addrs and quantity should have the same number of elements");
+
+        for (uint256 i = 0; i < addrs.length; i++) {
+            claimWhitelist[addrs[i]] = quantity[i];
+            whitelistedElements += quantity[i];
+        }
     }
-    function removedFromWhitelist(address addr) public onlyOwner {
-        claimWhitelist[addr] = false;
+    function removeFromWhitelist(address addr) public onlyOwner {
+        claimWhitelist[addr] = 0;
     }
     function _totalSupply() internal view returns (uint) {
         return _tokenIdTracker.current();
@@ -69,10 +75,17 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
             startingIndexBlock = block.number;
         } 
     }
+    function _maxNonWhitelistElements() internal view returns (uint) {
+        if (block.timestamp <= claimTimestampEnd) {
+            return MAX_ELEMENTS - whitelistedElements;
+        }
+
+        return MAX_ELEMENTS;
+    }
     function mint(address _to, uint256 _count) public payable saleIsOpen {
         uint256 total = _totalSupply();
-        require(total + _count <= MAX_ELEMENTS, "Max limit");
-        require(total <= MAX_ELEMENTS, "Sale end");
+        require(total + _count <= _maxNonWhitelistElements(), "Max limit");
+        require(total <= _maxNonWhitelistElements(), "Sale end");
         require(_count <= MAX_BY_MINT, "Exceeds number");
         require(msg.value >= price(_count), "Value below price");
 
@@ -82,15 +95,16 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
 
         _setStartingIndexBlock();
     }
-    function claim(address _to) public saleIsOpen {
-        require(claimWhitelist[msg.sender], "Address not whitelisted");
+    function claim(address _to, uint256 _count) public saleIsOpen {
+        require(claimWhitelist[msg.sender] > 0, "Address not whitelisted");
+        require(claimWhitelist[msg.sender] - _count >= 0, "Insufficient claim allocation");
         require(block.timestamp <= claimTimestampEnd, "Claim window has expired");
 
-        uint256 total = _totalSupply();
-        require(total + 1 <= MAX_ELEMENTS, "Max limit");
-        require(total <= MAX_ELEMENTS, "Sale end");
+        for (uint256 i = 0; i < _count; i++) {
+            _mintAnElement(_to);
+        }
 
-        _mintAnElement(_to);
+        claimWhitelist[msg.sender] -= _count;
 
         _setStartingIndexBlock();
 
