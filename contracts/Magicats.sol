@@ -95,19 +95,17 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
 
         _setStartingIndexBlock();
     }
-    function claim(address _to, uint256 _count) public saleIsOpen {
+    function claim(address _to) public saleIsOpen {
         require(claimWhitelist[msg.sender] > 0, "Address not whitelisted");
-        require(claimWhitelist[msg.sender] - _count >= 0, "Insufficient claim allocation");
         require(block.timestamp <= claimTimestampEnd, "Claim window has expired");
 
-        for (uint256 i = 0; i < _count; i++) {
+        for (uint256 i = 0; i < claimWhitelist[msg.sender]; i++) {
             _mintAnElement(_to);
         }
 
-        claimWhitelist[msg.sender] -= _count;
+        claimWhitelist[msg.sender] = 0;
 
         _setStartingIndexBlock();
-
     }
     function _mintAnElement(address _to) private {
         uint id = _totalSupply();
