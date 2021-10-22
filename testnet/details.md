@@ -1,1 +1,2 @@
-0x5fB252C9BDE9F554be64A2EaCb9F0C24F03d3363
+address: 0xFE3F0F028c172f98cb623683Dff99f5336f50d9E
+baseUri: https://ipfs.io/ipfs/QmefeJ3CmqRksZsjhR5N3KbGuRWctheMe1QtwCdHM2Ut4a/
