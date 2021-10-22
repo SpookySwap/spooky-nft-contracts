@@ -19,7 +19,7 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
 
     Counters.Counter private _tokenIdTracker;
 
-    mapping (address => uint) claimWhitelist;
+    mapping (address => uint) public claimWhitelist;
     string public MAGICATS_PROVENANCE = "";
     uint256 public startingIndexBlock;
     uint256 public startingIndex;
