@@ -9,11 +9,11 @@ import './interfaces/IWFTM.sol';
 contract MagicatRoyalties {
     using SafeERC20 for IERC20;
 
-    address public immutable xboo = 0xa48d959AE2E88f1dAA7D5F611E01908106dE7598;
+    address public constant xboo = 0xa48d959AE2E88f1dAA7D5F611E01908106dE7598;
     uint public immutable devCut;
-    IUniswapV2Pair public immutable pair = IUniswapV2Pair(0xEc7178F4C41f346b2721907F5cF7628E388A7a58); // boo-ftm pair
-    address public immutable wftm = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
-    address public devAddr;
+    IUniswapV2Pair public constant pair = IUniswapV2Pair(0xEc7178F4C41f346b2721907F5cF7628E388A7a58); // boo-ftm pair
+    address public constant wftm = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
+    address public devAddr = 0x2B43f12E31C6C03956930f0642cc49BA7Ca5BADE;
 
     modifier onlyEOA() {
         // Try to make flash-loan exploit harder to do by only allowing externally owned addresses.
@@ -26,8 +26,7 @@ contract MagicatRoyalties {
         _;
     }
 
-    constructor (address _devAddr, uint _devCut) {
-        devAddr = _devAddr;
+    constructor (uint _devCut) {
         devCut = _devCut;
     }
 

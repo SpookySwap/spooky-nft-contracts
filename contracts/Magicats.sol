@@ -9,9 +9,11 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import './interfaces/IWFTM.sol';
 
 contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     using SafeMath for uint256;
@@ -29,12 +31,14 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     uint256 public constant MAX_ELEMENTS = 5000;
     uint256 public constant PRICE = 150 * 10**18;
     uint256 public constant MAX_BY_MINT = 10;
-    address public constant creatorAddress = 0x0000000000000000000000000000000000000000;
-    address public constant devAddress = 0x0000000000000000000000000000000000000000;
+    address public constant creatorAddress = 0x2B43f12E31C6C03956930f0642cc49BA7Ca5BADE;
+    address public constant aceLandAddress = 0x2352b745561e7e6FCD03c093cE7220e3e126ace0;
+    address public constant wftm = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
     string public baseTokenURI;
 
     bool public saleOpen = false;
     bool public canChangeURI = true;
+    bool public canChangeProv = true;
 
     event CreateCat(uint256 indexed id);
     constructor(string memory baseURI) ERC721("Magicats", "MGC") {
@@ -51,23 +55,14 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
         _;
     }
 
-    function addToWhitelist(address[] memory addrs, uint[] memory quantity) public onlyOwner {
-        require(addrs.length == quantity.length, "Addrs and quantity should have the same number of elements");
-
-        for (uint256 i = 0; i < addrs.length; i++) {
-            claimWhitelist[addrs[i]] = quantity[i];
-            whitelistedElements += quantity[i];
-        }
-    }
-    function removeFromWhitelist(address addr) public onlyOwner {
-        claimWhitelist[addr] = 0;
-    }
     function _totalSupply() internal view returns (uint) {
         return _tokenIdTracker.current();
     }
+
     function totalMint() public view returns (uint256) {
         return _totalSupply();
     }
+
     function _setStartingIndexBlock() internal {
         // If we haven't set the starting index and this is either 1) the last saleable token or 2) the first token to be sold after
         // the end of pre-sale, set the starting index block
@@ -121,16 +116,6 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
         return baseTokenURI;
     }
 
-    // permanently revoke ability to change URI
-    function revokeSetURIAbility() public onlyOwner {
-        canChangeURI = false;
-    }
-
-    function setBaseURI(string memory baseURI) public onlyOwner {
-        require(canChangeURI, "Ability to change URI was revoked");
-        baseTokenURI = baseURI;
-    }
-
     function walletOfOwner(address _owner) external view returns (uint256[] memory) {
         uint256 tokenCount = balanceOf(_owner);
 
@@ -142,16 +127,22 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
         return tokensId;
     }
 
-    function setSaleStatus(bool val) public onlyOwner {
-        saleOpen = val;
+    // Set the starting index for the collection
+    function setStartingIndex() public {
+        require(startingIndex == 0, "Starting index is already set");
+        require(startingIndexBlock != 0, "Starting index block must be set");
+        
+        startingIndex = uint(blockhash(startingIndexBlock)) % MAX_ELEMENTS;
+        // Just a sanity case in the worst case if this function is called late (EVM only stores last 256 block hashes)
+        if (block.number.sub(startingIndexBlock) > 255) {
+            startingIndex = uint(blockhash(block.number - 1)) % MAX_ELEMENTS;
+        }
+        // Prevent default sequence
+        if (startingIndex == 0) {
+            startingIndex = startingIndex.add(1);
+        }
     }
 
-    function withdrawAll() public payable onlyOwner {
-        uint256 balance = address(this).balance;
-        require(balance > 0);
-        _widthdraw(devAddress, balance.mul(35).div(100));
-        _widthdraw(creatorAddress, address(this).balance);
-    }
 
     function _widthdraw(address _address, uint256 _amount) private {
         (bool success, ) = _address.call{value: _amount}("");
@@ -170,34 +161,62 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
         return super.supportsInterface(interfaceId);
     }
 
-    function setRevealTimestamp(uint256 newRevealTimestamp) public onlyOwner {
-        revealTimestamp = newRevealTimestamp;
+    // Admin functions
+    // permanently revoke ability to change URI
+    function revokeSetURIAbility() public onlyOwner {
+        canChangeURI = false;
+    }
+
+    // permanently revoke ability to change prov
+    function revokeSetProvAbility() public onlyOwner {
+        canChangeProv = false;
+    }
+
+    function setBaseURI(string memory baseURI) public onlyOwner {
+        require(canChangeURI, "Ability to change URI was revoked");
+        baseTokenURI = baseURI;
     }
 
     /*     
     * Set provenance once it's calculated
     */
     function setProvenanceHash(string memory provenanceHash) public onlyOwner {
+        require(canChangeProv, "Ability to change provenance hash was revoked");
         MAGICATS_PROVENANCE = provenanceHash;
     }
-    
-    /**
-     * Set the starting index for the collection
-     */
-    function setStartingIndex() public {
-        require(startingIndex == 0, "Starting index is already set");
-        require(startingIndexBlock != 0, "Starting index block must be set");
-        
-        startingIndex = uint(blockhash(startingIndexBlock)) % MAX_ELEMENTS;
-        // Just a sanity case in the worst case if this function is called late (EVM only stores last 256 block hashes)
-        if (block.number.sub(startingIndexBlock) > 255) {
-            startingIndex = uint(blockhash(block.number - 1)) % MAX_ELEMENTS;
+
+    function flipSaleStatus() public onlyOwner {
+        saleOpen = !saleOpen;
+    }
+
+    function withdrawAll(address _token) public payable onlyOwner {
+        uint256 balance = address(this).balance;
+        if(balance > 0){
+            IWFTM(wftm).deposit{value: balance.mul(20).div(100)}();
+            IERC20(wftm).transfer(aceLandAddress, IERC20(wftm).balanceOf(address(this)));
+            _widthdraw(creatorAddress, address(this).balance);
         }
-        // Prevent default sequence
-        if (startingIndex == 0) {
-            startingIndex = startingIndex.add(1);
+        if (_token != address(0)){
+            IERC20(_token).transfer(creatorAddress, IERC20(_token).balanceOf(address(this)));
         }
     }
+
+    function setRevealTimestamp(uint256 newRevealTimestamp) public onlyOwner {
+        revealTimestamp = newRevealTimestamp;
+    }
+    
+    function addToWhitelist(address[] memory addrs, uint[] memory quantity) public onlyOwner {
+        require(addrs.length == quantity.length, "Addrs and quantity should have the same number of elements");
+
+        for (uint256 i = 0; i < addrs.length; i++) {
+            claimWhitelist[addrs[i]] = quantity[i];
+            whitelistedElements += quantity[i];
+        }
+    }
+    function removeFromWhitelist(address addr) public onlyOwner {
+        claimWhitelist[addr] = 0;
+    }
+
 
     /**
      * Set the starting index block for the collection, essentially unblocking
