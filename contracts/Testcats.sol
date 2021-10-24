@@ -13,21 +13,21 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
+contract Testcats is ERC721Enumerable, Ownable, ERC721Burnable {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIdTracker;
 
     mapping (address => uint) public claimWhitelist;
-    string public MAGICATS_PROVENANCE = "";
+    string public TESTCATS_PROVENANCE = "";
     uint256 public startingIndexBlock;
     uint256 public startingIndex;
     uint256 public revealTimestamp;
     uint256 public claimTimestampEnd;
     uint256 public whitelistedElements;
     uint256 public constant MAX_ELEMENTS = 5000;
-    uint256 public constant PRICE = 150 * 10**18;
+    uint256 public constant PRICE = 1 * 10**18;
     uint256 public constant MAX_BY_MINT = 10;
     address public constant creatorAddress = 0x0000000000000000000000000000000000000000;
     address public constant devAddress = 0x0000000000000000000000000000000000000000;
@@ -37,7 +37,7 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     bool public canChangeURI = true;
 
     event CreateCat(uint256 indexed id);
-    constructor(string memory baseURI) ERC721("Magicats", "MGC") {
+    constructor(string memory baseURI) ERC721("Testcats", "TTC") {
         setBaseURI(baseURI);
         revealTimestamp = block.timestamp + (86400 * 7); // reveal in 7 days
         claimTimestampEnd = block.timestamp + (86400 * 2); // claim window is 2 days
@@ -178,7 +178,7 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     * Set provenance once it's calculated
     */
     function setProvenanceHash(string memory provenanceHash) public onlyOwner {
-        MAGICATS_PROVENANCE = provenanceHash;
+        TESTCATS_PROVENANCE = provenanceHash;
     }
     
     /**
