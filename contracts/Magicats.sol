@@ -27,6 +27,7 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     uint256 public startingIndex;
     uint256 public revealTimestamp;
     uint256 public claimTimestampEnd;
+    uint256 public saleStart;
     uint256 public whitelistedElements;
     uint256 public constant MAX_ELEMENTS = 5000;
     uint256 public constant PRICE = 150 * 10**18;
@@ -43,8 +44,6 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     event CreateCat(uint256 indexed id);
     constructor(string memory baseURI) ERC721("Magicats", "MGC") {
         setBaseURI(baseURI);
-        revealTimestamp = block.timestamp + (86400 * 7); // reveal in 7 days
-        claimTimestampEnd = block.timestamp + (86400 * 2); // claim window is 2 days
     }
 
     modifier saleIsOpen {
@@ -189,6 +188,13 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
         saleOpen = !saleOpen;
     }
 
+    function startSale() public onlyOwner {
+        require(saleStart == 0, "cant re-start initial sale");
+        saleStart = block.timestamp;
+        revealTimestamp = block.timestamp + (86400 * 2); // reveal in 2 days
+        claimTimestampEnd = block.timestamp + (86400 * 2); // claim window is 2 days
+    }
+
     function withdrawAll(address _token) public payable onlyOwner {
         uint256 balance = address(this).balance;
         if(balance > 0){
@@ -216,7 +222,6 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     function removeFromWhitelist(address addr) public onlyOwner {
         claimWhitelist[addr] = 0;
     }
-
 
     /**
      * Set the starting index block for the collection, essentially unblocking
