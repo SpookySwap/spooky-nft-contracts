@@ -31,7 +31,7 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     uint256 public whitelistedElements;
     uint256 public constant MAX_ELEMENTS = 5000;
     uint256 public constant PRICE = 150 * 10**18;
-    uint256 public constant MAX_BY_MINT = 10;
+    uint256 public constant MAX_BY_MINT = 5;
     address public constant creatorAddress = 0x2B43f12E31C6C03956930f0642cc49BA7Ca5BADE;
     address public constant aceLandAddress = 0x2352b745561e7e6FCD03c093cE7220e3e126ace0;
     address public constant wftm = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;

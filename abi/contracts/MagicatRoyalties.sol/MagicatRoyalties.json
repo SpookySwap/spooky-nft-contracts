@@ -2,9 +2,9 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_devAddr",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "_devCut",
+        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
@@ -71,19 +71,6 @@
       }
     ],
     "name": "setDevAddr",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "setDevCut",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

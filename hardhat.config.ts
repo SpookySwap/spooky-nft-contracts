@@ -28,7 +28,7 @@ const accounts = {
  * @type import('hardhat/config').HardhatUserConfig
  */
 const config: HardhatUserConfig = {
-  defaultNetwork: "localhost",
+  defaultNetwork: "hardhat",
   mocha: {
     timeout: 20000,
   },
