@@ -9,11 +9,25 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import './interfaces/IWFTM.sol';
+
+interface IERC2981 is IERC165 {
+  /// @notice Called with the sale price to determine how much royalty
+  //          is owed and to whom.
+  /// @param _tokenId - the NFT asset queried for royalty information
+  /// @param _salePrice - the sale price of the NFT asset specified by _tokenId
+  /// @return receiver - address of who should be sent the royalty payment
+  /// @return royaltyAmount - the royalty payment amount for _salePrice
+  function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
+    external
+    view
+    returns (address receiver, uint256 royaltyAmount);
+}
 
 contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     using SafeMath for uint256;
@@ -97,6 +111,7 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
             _mintAnElement(_to);
         }
 
+        whitelistedElements -= claimWhitelist[msg.sender];
         claimWhitelist[msg.sender] = 0;
 
         _setStartingIndexBlock();
@@ -143,7 +158,7 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     }
 
 
-    function _widthdraw(address _address, uint256 _amount) private {
+    function _withdraw(address _address, uint256 _amount) private {
         (bool success, ) = _address.call{value: _amount}("");
         require(success, "Transfer failed.");
     }
@@ -157,7 +172,13 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, ERC721Enumerable) returns (bool) {
-        return super.supportsInterface(interfaceId);
+        return interfaceId == type(IERC2981).interfaceId || super.supportsInterface(interfaceId);
+    }
+
+    function royaltyInfo(uint, uint _salePrice) external pure returns (address, uint) {
+        uint royalty = 500;
+        address receiver = 0xf4C90BBa1747Cac1CA332D9483Fa54845948E3C4;
+        return (receiver, (_salePrice * royalty) / 10000);
     }
 
     // Admin functions
@@ -195,12 +216,12 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
         claimTimestampEnd = block.timestamp + (86400 * 2); // claim window is 2 days
     }
 
-    function withdrawAll(address _token) public payable onlyOwner {
+    function withdrawAll(address _token) public onlyOwner {
         uint256 balance = address(this).balance;
         if(balance > 0){
             IWFTM(wftm).deposit{value: balance.mul(20).div(100)}();
             IERC20(wftm).transfer(aceLandAddress, IERC20(wftm).balanceOf(address(this)));
-            _widthdraw(creatorAddress, address(this).balance);
+            _withdraw(creatorAddress, address(this).balance);
         }
         if (_token != address(0)){
             IERC20(_token).transfer(creatorAddress, IERC20(_token).balanceOf(address(this)));
@@ -220,6 +241,7 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
         }
     }
     function removeFromWhitelist(address addr) public onlyOwner {
+        whitelistedElements -= claimWhitelist[addr];
         claimWhitelist[addr] = 0;
     }
 

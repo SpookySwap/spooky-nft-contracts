@@ -97,6 +97,7 @@ contract Testcats is ERC721Enumerable, Ownable, ERC721Burnable {
             _mintAnElement(_to);
         }
 
+        whitelistedElements -= claimWhitelist[msg.sender];
         claimWhitelist[msg.sender] = 0;
 
         _setStartingIndexBlock();
@@ -143,7 +144,7 @@ contract Testcats is ERC721Enumerable, Ownable, ERC721Burnable {
     }
 
 
-    function _widthdraw(address _address, uint256 _amount) private {
+    function _withdraw(address _address, uint256 _amount) private {
         (bool success, ) = _address.call{value: _amount}("");
         require(success, "Transfer failed.");
     }
@@ -195,12 +196,12 @@ contract Testcats is ERC721Enumerable, Ownable, ERC721Burnable {
         claimTimestampEnd = block.timestamp + (3600 * 12); // claim window is 2 days
     }
 
-    function withdrawAll(address _token) public payable onlyOwner {
+    function withdrawAll(address _token) public onlyOwner {
         uint256 balance = address(this).balance;
         if(balance > 0){
             //IWFTM(wftm).deposit{value: balance.mul(20).div(100)}();
             //IERC20(wftm).transfer(aceLandAddress, IERC20(wftm).balanceOf(address(this)));
-            _widthdraw(creatorAddress, address(this).balance);
+            _withdraw(creatorAddress, address(this).balance);
         }
         if (_token != address(0)){
             IERC20(_token).transfer(creatorAddress, IERC20(_token).balanceOf(address(this)));
@@ -220,6 +221,7 @@ contract Testcats is ERC721Enumerable, Ownable, ERC721Burnable {
         }
     }
     function removeFromWhitelist(address addr) public onlyOwner {
+        whitelistedElements -= claimWhitelist[addr];
         claimWhitelist[addr] = 0;
     }
 

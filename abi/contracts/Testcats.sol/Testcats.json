@@ -918,7 +918,7 @@
     ],
     "name": "withdrawAll",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]
