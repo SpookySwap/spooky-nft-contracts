@@ -1,8 +1,8 @@
 import { ethers, run } from "hardhat"
 
 async function main() {
-    const uri = ''
-    const Magicats = await ethers.getContractFactory("Testcats");
+    const uri = 'ipfs://Qmch1E575xvg3HgZQ6vuAxhyvAi7pLpCw4cufmA6W6fGjF/'
+    const Magicats = await ethers.getContractFactory("Magicats");
     const magicats = await Magicats.deploy(uri);
     await magicats.deployed();
   
