@@ -191,7 +191,7 @@ contract Magicats is ERC721Enumerable, Ownable, ERC721Burnable {
     function startSale() public onlyOwner {
         require(saleStart == 0, "cant re-start initial sale");
         saleStart = block.timestamp;
-        revealTimestamp = block.timestamp + (86400 * 2); // reveal in 2 days
+        revealTimestamp = block.timestamp + (86400 * 2) + (3600 * 2); // reveal in 2 days 2 hours
         claimTimestampEnd = block.timestamp + (86400 * 2); // claim window is 2 days
     }
 

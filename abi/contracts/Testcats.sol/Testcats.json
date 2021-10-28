@@ -119,6 +119,19 @@
   },
   {
     "inputs": [],
+    "name": "MAGICATS_PROVENANCE",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MAX_BY_MINT",
     "outputs": [
       {
@@ -158,12 +171,12 @@
   },
   {
     "inputs": [],
-    "name": "TESTCATS_PROVENANCE",
+    "name": "aceLandAddress",
     "outputs": [
       {
-        "internalType": "string",
+        "internalType": "address",
         "name": "",
-        "type": "string"
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -252,6 +265,19 @@
   },
   {
     "inputs": [],
+    "name": "canChangeProv",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "canChangeURI",
     "outputs": [
       {
@@ -323,20 +349,14 @@
   },
   {
     "inputs": [],
-    "name": "devAddress",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
+    "name": "emergencySetStartingIndexBlock",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "emergencySetStartingIndexBlock",
+    "name": "flipSaleStatus",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -501,6 +521,13 @@
   },
   {
     "inputs": [],
+    "name": "revokeSetProvAbility",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "revokeSetURIAbility",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -571,6 +598,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "saleStart",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -628,21 +668,15 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "val",
-        "type": "bool"
-      }
-    ],
-    "name": "setSaleStatus",
+    "inputs": [],
+    "name": "setStartingIndex",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "setStartingIndex",
+    "name": "startSale",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -850,6 +884,19 @@
   },
   {
     "inputs": [],
+    "name": "wftm",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "whitelistedElements",
     "outputs": [
       {
@@ -862,7 +909,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
+      }
+    ],
     "name": "withdrawAll",
     "outputs": [],
     "stateMutability": "payable",
